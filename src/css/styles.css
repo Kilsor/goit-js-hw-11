@@ -1,0 +1,103 @@
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  margin: 0;
+  background-color: #3498db; /* Синій колір фону */
+}
+
+.search-form {
+  background-color: #fff; /* Колір фону форми */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-form input[type='text'] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 1;
+  margin-right: 10px;
+}
+
+.search-form button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-form button:hover {
+  background-color: #2980b9; /* Змінюємо колір кнопки при наведенні курсора */
+}
+
+/* Стилі для галереї */
+.gallery {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px; /* Відстань між картками */
+}
+
+.photo-card {
+  text-decoration: none;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.photo-card img {
+  width: 100%;
+  height: 200px; /* Фіксована висота зображення */
+  border-radius: 8px;
+  object-fit: cover; /* Зберігає пропорції і заповнює блок */
+}
+
+.info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333; /* Колір тексту */
+}
+
+.info-item {
+  text-align: center;
+  margin-right: 10px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+/* Додатковий стиль для кнопки "Load more" */
+.load-more-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.load-more {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.load-more:hover {
+  background-color: #2980b9; /* Змінюємо колір кнопки при наведенні курсора */
+}
