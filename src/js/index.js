@@ -3,83 +3,78 @@ import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 // Додатковий імпорт стилів SimpleLightbox
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import 'intersection-observer'; // Імпортуємо бібліотеку Intersection Observer
 
 let currentPage = 1;
+let isLoading = false;
 
 const searchForm = document.getElementById('search-form');
 const galleryContainer = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more');
 
 // Прослуховуємо подію submit на формі пошуку та викликаємо функцію onSubmitForm
 searchForm.addEventListener('submit', onSubmitForm);
 
-// Прослуховуємо подію click на кнопці "Load more" та викликаємо функцію onLoadMoreClick
-loadMoreBtn.addEventListener('click', onLoadMoreClick);
-
 // Функція, що обробляє подію submit на формі пошуку
 async function onSubmitForm(event) {
   event.preventDefault();
-
-  // Отримуємо значення пошукового запиту з форми
   const searchQuery = getSearchQueryFromForm();
 
-  // Виконуємо запит до API для отримання зображень
-  const images = await fetchImages(searchQuery, 1);
+  // Скидаємо сторінку на початок при новому пошуковому запиті
+  currentPage = 1;
 
-  if (images.length > 0) {
-    // Відображаємо отримані зображення у галереї
-    displayNewGallery(images); // Використовуємо displayNewGallery для заміни галереї при новому пошуковому запиті
-    currentPage = 2;
-    showLoadMoreBtn();
-  } else {
-    // Відображаємо повідомлення про відсутність результатів пошуку
+  const images = await fetchImages(searchQuery, currentPage);
+  displayGallery(images);
+  currentPage++;
+  addIntersectionObserver(); // Додаємо спостерігача Intersection Observer
+
+  if (images.length === 0) {
     showNoResultsMessage();
-
-    // Ховаємо кнопку "Load more", оскільки результатів немає
-    hideLoadMoreBtn();
   }
 }
 
-// Функція, що обробляє подію click на кнопці "Load more"
-async function onLoadMoreClick() {
-  // Отримуємо значення пошукового запиту з форми
-  const searchQuery = getSearchQueryFromForm();
+// Функція для додавання спостерігача Intersection Observer
+function addIntersectionObserver() {
+  const options = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.5,
+  };
 
-  // Виконуємо запит до API для отримання наступної порції зображень
+  const observer = new IntersectionObserver(onIntersection, options);
+  const sentinel = document.createElement('div');
+  sentinel.classList.add('sentinel');
+  galleryContainer.appendChild(sentinel);
+  observer.observe(sentinel);
+}
+
+// Функція, що викликається, коли спостерігач Intersection Observer знаходиться в зоні видимості
+async function onIntersection(entries, observer) {
+  if (isLoading || entries[0].intersectionRatio <= 0) return;
+
+  isLoading = true;
+  const searchQuery = getSearchQueryFromForm();
   const images = await fetchImages(searchQuery, currentPage);
 
   if (images.length > 0) {
-    // Відображаємо отримані зображення у галереї
-    appendGalleryMarkup(images); // Використовуємо appendGalleryMarkup для додавання зображень до попередньої галереї
+    appendGalleryMarkup(images);
     currentPage++;
-
-    // Плавно прокручуємо сторінку вниз після завантаження нової групи зображень
-    await smoothScrollToNextGroup();
   } else {
-    // Якщо зображення більше немає, ховаємо кнопку "Load more" та відображаємо відповідне повідомлення
-    hideLoadMoreBtn();
+    observer.disconnect(); // Відключаємо спостерігач, якщо зображення закінчились
     showEndOfResultsMessage();
   }
+
+  isLoading = false;
 }
 
-// Функція для отримання пошукового запиту з форми
-function getSearchQueryFromForm() {
-  const formData = new FormData(searchForm);
-  return formData.get('searchQuery');
-}
-
-// Функція для відображення зображень у галереї після нового пошукового запиту
-function displayNewGallery(images) {
+// Функція для відображення зображень у галереї
+function displayGallery(images) {
   const galleryMarkup = createGalleryMarkup(images);
   replaceGalleryMarkup(galleryMarkup);
 
-  // Ініціалізуємо SimpleLightbox для всіх посилань на зображення
+  // Ініціалізуємо SimpleLightbox за допомогою селектора
   const lightbox = new SimpleLightbox('.gallery a', {
     /* Опції для налаштування SimpleLightbox */
   });
-
-  // Оновлюємо галерею
-  lightbox.refresh();
 }
 
 // Функція для заміни розмітки галереї в DOM
@@ -92,17 +87,18 @@ function appendGalleryMarkup(images) {
   const galleryMarkup = createGalleryMarkup(images);
   galleryContainer.insertAdjacentHTML('beforeend', galleryMarkup);
 
-  // Якщо SimpleLightbox вже був ініціалізований, оновлюємо його, інакше створюємо новий
-  if (lightbox) {
-    lightbox.refresh();
-  } else {
-    lightbox = new SimpleLightbox('.gallery a', {
-      /* Опції для налаштування SimpleLightbox */
-    });
-  }
+  // Отримуємо тільки нові посилання на зображення, які ще не мають ініціалізованого SimpleLightbox
+  const newImageLinks = galleryContainer.querySelectorAll(
+    '.photo-card:not(.sl-initialized)'
+  );
+  newImageLinks.forEach(link => {
+    link.classList.add('sl-initialized'); // Додаємо клас для позначення ініціалізованих елементів
+  });
 
   // Оновлюємо галерею
-  lightbox.refresh();
+  const lightbox = new SimpleLightbox(newImageLinks, {
+    /* Опції для налаштування SimpleLightbox */
+  });
 }
 
 // Функція для створення розмітки зображень для галереї
@@ -124,31 +120,10 @@ function createGalleryMarkup(images) {
     .join('');
 }
 
-let lightbox; // Оголошуємо змінну для зберігання SimpleLightbox
-
-// Функція для плавного прокручування сторінки вниз після завантаження нової групи зображень
-async function smoothScrollToNextGroup() {
-  const { height: cardHeight } = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect();
-
-  // Затримка перед прокручуванням
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  window.scrollBy({
-    top: cardHeight * 2, // Множимо на 2, щоб прокрутити на висоту двох карток
-    behavior: 'smooth',
-  });
-}
-
-// Функція для показу кнопки "Load more"
-function showLoadMoreBtn() {
-  loadMoreBtn.style.display = 'block';
-}
-
-// Функція для ховання кнопки "Load more"
-function hideLoadMoreBtn() {
-  loadMoreBtn.style.display = 'none';
+// Функція для отримання пошукового запиту з форми
+function getSearchQueryFromForm() {
+  const formData = new FormData(searchForm);
+  return formData.get('searchQuery');
 }
 
 // Функція для показу повідомлення про відсутність результатів пошуку
