@@ -73,12 +73,16 @@
 }
 
 .info-item {
+  padding: 8px;
   text-align: center;
-  margin-right: 10px;
   font-weight: bold;
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #fff;
+}
+
+.info-item:not(:last-child) {
+  margin-right: 10px;
 }
 
 /* Додатковий стиль для кнопки "Load more" */

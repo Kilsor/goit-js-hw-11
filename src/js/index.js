@@ -71,10 +71,13 @@ function displayGallery(images) {
   const galleryMarkup = createGalleryMarkup(images);
   replaceGalleryMarkup(galleryMarkup);
 
+  // Опції для SimpleLightbox
+  const lightboxOptions = {
+    /* Додайте опції SimpleLightbox тут, якщо потрібно */
+  };
+
   // Ініціалізуємо SimpleLightbox за допомогою селектора
-  const lightbox = new SimpleLightbox('.gallery a', {
-    /* Опції для налаштування SimpleLightbox */
-  });
+  const lightbox = new SimpleLightbox('.gallery a', lightboxOptions);
 }
 
 // Функція для заміни розмітки галереї в DOM
